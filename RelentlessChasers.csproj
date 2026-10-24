@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <AssemblyName>RelentlessChasers</AssemblyName>
+    <LangVersion>latest</LangVersion>
+
+    <!-- Override with: dotnet build -p:GameDir="D:\Games\Spooky's Jump Scare Mansion HD Renovation\" (keep the trailing backslash) -->
+    <GameDir Condition="'$(GameDir)' == ''">C:\Program Files (x86)\Steam\steamapps\common\Spooky's Jump Scare Mansion HD Renovation\</GameDir>
+    <PluginDir>$(GameDir)BepInEx\plugins\</PluginDir>
+
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>bin\</OutputPath>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <!-- The apostrophe in the game folder name breaks MSBuild item transforms, so copy with Exec -->
+  <Target Name="DeployToPlugins" AfterTargets="Build" Condition="Exists('$(PluginDir)')">
+    <Exec Command="copy /Y &quot;$(TargetPath)&quot; &quot;$(PluginDir)&quot;" />
+  </Target>
+
+  <ItemGroup>
+    <!-- BepInEx -->
+    <Reference Include="BepInEx">
+      <HintPath>$(GameDir)BepInEx\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Harmony -->
+    <Reference Include="0Harmony">
+      <HintPath>$(GameDir)BepInEx\core\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- The game's own code (SpecimenManager etc.) -->
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(GameDir)SpookyUnity_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Optional: lets the mod lock the camera while the Configuration Manager window is open -->
+    <Reference Include="ConfigurationManager">
+      <HintPath>$(GameDir)BepInEx\plugins\ConfigurationManager\ConfigurationManager.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Unity 2021+ modules -->
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(GameDir)SpookyUnity_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Often needed for MonoBehaviour / GameObject types -->
+    <Reference Include="UnityEngine">
+      <HintPath>$(GameDir)SpookyUnity_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <!-- Some Unity installs also require these; harmless if present -->
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(GameDir)SpookyUnity_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(GameDir)SpookyUnity_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
