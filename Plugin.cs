@@ -87,14 +87,23 @@ public class Plugin : BaseUnityPlugin
                 new AcceptableValueRange<float>(0f, 1f)));
         MinRoomsBeforeDespawn = Config.Bind("Chasers", "MinRoomsBeforeDespawn", 0,
             new ConfigDescription("Applies to every chaser. A chaser always stays for at least this many rooms after it spawns. After that, each room it rolls its own despawn chance.",
-                new AcceptableValueRange<int>(0, 100)));
+                new AcceptableValueRange<int>(0, 100),
+                new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
         AllowDuplicateChasers = Config.Bind("Chasers", "AllowDuplicateChasers", true,
             "Allow the same chaser to be active more than once at the same time.");
         ExtraChaserSlots = Config.Bind("Chasers", "ExtraChaserSlots", 2,
-            new ConfigDescription("Added to the game's chaser cap so new chasers can keep joining after earlier ones stay. In Endless this is on top of the chasers you pick. The game's default cap in Endless is 1 chaser per 100 rooms (rooms 1-100: 0, 101-200: 1, 201-300: 2, and so on up to a maximum of 5 from room 501), or the number of chasers you pick when starting from a skipped floor.",
-                new AcceptableValueRange<int>(0, 20)));
+            new ConfigDescription("Added to the game's chaser cap so new chasers can keep joining after earlier ones stay. In Endless this is on top of the chasers you pick. The game's default cap in Endless is 1 chaser per 100 rooms (rooms 1-100: 0, 101-200: 1, 201-300: 2, and so on up to a maximum of 5 from room 501). If you skip ahead at the start of a run, the base cap is instead the number of chasers you picked on the skip screen.",
+                new AcceptableValueRange<int>(0, 100),
+                new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
         AllowSaveWithChasers = Config.Bind("Endless", "AllowSaveWithChasers", true,
             "Lets you exit to the menu while a chaser is active and stops the game from invalidating the Endless save. Active chasers are not saved, so they will be gone when you resume.");
+
+        BindBulkEdit("SetAllSpawnChance", "Set all chasers' spawn chance",
+            "Pick a value, then press Apply to overwrite every chaser's SpawnChance with it. Only works from the F1 window (Configuration Manager).",
+            settings => settings.SpawnChance);
+        BindBulkEdit("SetAllDespawnChance", "Set all chasers' despawn chance",
+            "Pick a value, then press Apply to overwrite every chaser's DespawnChance with it. Only works from the F1 window (Configuration Manager).",
+            settings => settings.DespawnChance);
 
         foreach (string id in KnownChasers)
         {
@@ -108,6 +117,58 @@ public class Plugin : BaseUnityPlugin
             ConfigWindowLock.Hook(Chainloader.PluginInfos[ConfigManagerGuid].Instance);
         }
         Logger.LogInfo("Relentless Chasers loaded!");
+    }
+
+    // A slider plus an Apply button in the Configuration Manager window that overwrites one setting on every chaser.
+    private static void BindBulkEdit(string key, string displayName, string description, Func<ChaserSettings, ConfigEntry<float>> target)
+    {
+        string status = "";
+        Action<ConfigEntryBase> drawer = entryBase =>
+        {
+            ConfigEntry<float> entry = (ConfigEntry<float>)entryBase;
+            GUILayout.BeginHorizontal();
+            float slid = GUILayout.HorizontalSlider(entry.Value, 0f, 1f, GUILayout.ExpandWidth(true));
+            float rounded = Mathf.Round(slid * 100f) / 100f;
+            if (rounded != entry.Value)
+            {
+                entry.Value = rounded;
+                status = "";
+            }
+            GUILayout.Label(entry.Value.ToString("0.00"), GUILayout.Width(40f));
+            if (GUILayout.Button("Apply to all", GUILayout.ExpandWidth(false)))
+            {
+                ApplyToAll(target, entry.Value);
+                status = "Done";
+            }
+            if (status.Length > 0)
+            {
+                GUILayout.Label(status, GUILayout.ExpandWidth(false));
+            }
+            GUILayout.EndHorizontal();
+        };
+
+        Instance.Config.Bind("Bulk edit", key, 0.1f,
+            new ConfigDescription(description, new AcceptableValueRange<float>(0f, 1f),
+                new ConfigurationManagerAttributes { CustomDrawer = drawer, HideDefaultButton = true, DispName = displayName }));
+    }
+
+    private static int ApplyToAll(Func<ChaserSettings, ConfigEntry<float>> target, float value)
+    {
+        Instance.Config.SaveOnConfigSet = false;
+        try
+        {
+            foreach (ChaserSettings settings in Chasers.Values)
+            {
+                target(settings).Value = value;
+            }
+        }
+        finally
+        {
+            Instance.Config.SaveOnConfigSet = true;
+            Instance.Config.Save();
+        }
+        Log.LogInfo("Set a setting on all " + Chasers.Count + " chasers to " + value + ".");
+        return Chasers.Count;
     }
 
     // Per-chaser settings. Chasers the game adds later that aren't in KnownChasers get settings on first use.
@@ -125,7 +186,7 @@ public class Plugin : BaseUnityPlugin
             SpawnChance = Instance.Config.Bind(section, "SpawnChance", 0.1f,
                 new ConfigDescription("Weighting for how likely this chaser is picked when a new chaser joins, compared with the other chasers' values. 0 = never spawns.",
                     new AcceptableValueRange<float>(0f, 1f))),
-            DespawnChance = Instance.Config.Bind(section, "DespawnChance", 0f,
+            DespawnChance = Instance.Config.Bind(section, "DespawnChance", 0.1f,
                 new ConfigDescription("Chance this chaser despawns at the end of each room once it has stayed the minimum number of rooms. 0 = never despawns, 1 = always despawns.",
                     new AcceptableValueRange<float>(0f, 1f)))
         };
@@ -179,6 +240,15 @@ public class Plugin : BaseUnityPlugin
         Log.LogInfo("Chasers with settings: " + string.Join(", ", mgr.allRechasableSpecimen.ToArray()));
         Log.LogInfo("Not chasers (the game's own despawn rules still apply): " + string.Join(", ", notRechasable.ToArray()));
     }
+}
+
+// Configuration Manager finds this by its name and field names, so the mod needs no reference to it to use a custom drawer.
+internal sealed class ConfigurationManagerAttributes
+{
+    public Action<ConfigEntryBase> CustomDrawer;
+    public bool? HideDefaultButton;
+    public string DispName;
+    public bool? ShowRangeAsPercent;
 }
 
 // Keeps the camera (and attacks) still while the Configuration Manager window is open, using the game's own look lock.
@@ -334,7 +404,9 @@ internal static class SpawnPatch
             {
                 return;
             }
-            if (loadState.roomRuntimeData.roomConfig.noSpecimenSpawnAllowed)
+            RoomConfig room = loadState.roomRuntimeData.roomConfig;
+            // The Endless starting room (axe pickup) has no spawn doors and doesn't set noSpecimenSpawnAllowed.
+            if (room.noSpecimenSpawnAllowed || room.sceneName == "EM_Start")
             {
                 return;
             }

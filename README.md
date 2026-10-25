@@ -8,7 +8,7 @@ By default the mod only affects Endless mode. The main game is untouched.
 
 - **Per-chaser spawn and despawn settings** for all 25 chasers.
   - `SpawnChance` (0-1) is a weighting used when a new chaser joins. 0 means that chaser never spawns.
-  - `DespawnChance` (0-1) is rolled at the end of each room once the chaser has stayed long enough. 0 means never, 1 means always.
+  - `DespawnChance` (0-1, default 0.1) is rolled at the end of each room once the chaser has stayed long enough. 0 means never, 1 means always.
 - **Global settings**
   - `SpawnChancePerRoom` (default 0.5): chance each room that a new chaser joins (while under the cap). When it triggers, the chaser is picked using the per-chaser weightings.
   - `MinRoomsBeforeDespawn` (default 0): a chaser always stays at least this many rooms. The first despawn roll comes at the end of room N+1.
@@ -17,6 +17,7 @@ By default the mod only affects Endless mode. The main game is untouched.
   - `ExtraChaserSlots` (default 2): added to the game's chaser cap. The game's own Endless cap is 1 chaser per 100 rooms, up to 5.
   - `EndlessOnly` (default on): only apply the mod in Endless mode.
   - `AllowSaveWithChasers` (default on): lets you quit to the menu with a chaser active, and stops the game invalidating the Endless save. Active chasers aren't saved, so they're gone when you resume.
+- **Bulk edit** (F1 window, "Bulk edit" section): pick a value with the slider and press **Apply** to overwrite every chaser's `SpawnChance` or `DespawnChance` at once. You can then adjust individual chasers afterwards. The buttons need Configuration Manager; the two slider values also appear in the `.cfg` file but do nothing there.
 - Chasers are still cleared when you enter their spawn section, as in the base game.
 - Settings are labelled `ID (nickname)`, e.g. `EMKHMonster5 (Ghost Cow)`.
 
