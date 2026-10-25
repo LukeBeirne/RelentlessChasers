@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
-    <AssemblyName>RelentlessChasers</AssemblyName>
+    <AssemblyName>RelentlessSpecimens</AssemblyName>
     <LangVersion>latest</LangVersion>
 
     <!-- Override with: dotnet build -p:GameDir="D:\Games\Spooky's Jump Scare Mansion HD Renovation\" (keep the trailing backslash) -->

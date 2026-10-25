@@ -8,7 +8,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
 
-[BepInPlugin("spooky.relentlesschasers", "Relentless Chasers", "2.0.0")]
+[BepInPlugin("spooky.relentlessspecimens", "Relentless Specimens", "2.0.0")]
 [BepInDependency(ConfigManagerGuid, BepInDependency.DependencyFlags.SoftDependency)]
 public class Plugin : BaseUnityPlugin
 {
@@ -86,7 +86,7 @@ public class Plugin : BaseUnityPlugin
             new ConfigDescription("Chance each room that a new chaser joins, while you are under the chaser cap. When it triggers, which chaser joins is picked using each chaser's own SpawnChance as a weighting.",
                 new AcceptableValueRange<float>(0f, 1f)));
         MinRoomsBeforeDespawn = Config.Bind("Chasers", "MinRoomsBeforeDespawn", 0,
-            new ConfigDescription("Applies to every chaser. A chaser always stays for at least this many rooms after it spawns. After that, each room it rolls its own despawn chance.",
+            new ConfigDescription("Applies to every chaser. A chaser always stays for at least this many rooms after it spawns. After that, each room it rolls its own despawn chance. Spooper and Lisa don't count rooms or despawn until they can actually hurt you.",
                 new AcceptableValueRange<int>(0, 100),
                 new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
         AllowDuplicateChasers = Config.Bind("Chasers", "AllowDuplicateChasers", true,
@@ -110,13 +110,13 @@ public class Plugin : BaseUnityPlugin
             SettingsFor(id);
         }
 
-        new Harmony("spooky.relentlesschasers").PatchAll();
+        new Harmony("spooky.relentlessspecimens").PatchAll();
 
         if (Chainloader.PluginInfos.ContainsKey(ConfigManagerGuid))
         {
             ConfigWindowLock.Hook(Chainloader.PluginInfos[ConfigManagerGuid].Instance);
         }
-        Logger.LogInfo("Relentless Chasers loaded!");
+        Logger.LogInfo("Relentless Specimens loaded!");
     }
 
     // A slider plus an Apply button in the Configuration Manager window that overwrites one setting on every chaser.
@@ -220,6 +220,22 @@ public class Plugin : BaseUnityPlugin
     internal static bool IsChaser(SpecimenManager mgr, string id)
     {
         return mgr.allRechasableSpecimen != null && id != null && mgr.allRechasableSpecimen.Contains(id);
+    }
+
+    // Some chasers announce themselves for a while before they can hurt you. They don't despawn or count rooms until they can.
+    internal static bool IsThreat(SpecimenInterface spec)
+    {
+        UnknownSpecimen3Controller spooper = spec as UnknownSpecimen3Controller;
+        if (spooper != null)
+        {
+            return spooper.emergenceCounter <= 0;
+        }
+        UnknownSpecimen5Controller lisa = spec as UnknownSpecimen5Controller;
+        if (lisa != null)
+        {
+            return lisa.state == UnknownSpecimen5Controller.State.Chasing;
+        }
+        return true;
     }
 
     internal static void LogChasers(SpecimenManager mgr)
@@ -339,6 +355,10 @@ internal static class DespawnPatch
                     continue;
                 }
                 spec.hp = Math.Max(spec.hp, 1);
+                if (!Plugin.IsThreat(spec))
+                {
+                    continue;
+                }
                 int rooms = RoomCounter.Increment(go);
                 if (Plugin.PersistChasers.Value || rooms <= Plugin.MinRoomsBeforeDespawn.Value)
                 {
