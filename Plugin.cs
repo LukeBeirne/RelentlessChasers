@@ -24,7 +24,7 @@ public class Plugin : BaseUnityPlugin
         "SpecimenTwelve", "SpecimenTwo"
     };
 
-    // Display names from the game's text where it has them ("Specimen N"), otherwise the names the community uses (Fandom wiki, Steam Endless guide).
+    // Names the community uses (Fandom wiki, Steam Endless guide).
     private static readonly Dictionary<string, string> Nicknames = new Dictionary<string, string>
     {
         { "EMClown", "The Clown" },
@@ -41,17 +41,17 @@ public class Plugin : BaseUnityPlugin
         { "EMUnknownSpecimen4", "Tirsiak" },
         { "EMUnknownSpecimen5", "Lisa" },
         { "EMWoormyCharles", "Woormy Charles" },
-        { "EMSpecimenFour", "Specimen 4" },
-        { "SpecimenEight", "Specimen 8" },
-        { "SpecimenEleven", "Specimen 11" },
-        { "SpecimenFive", "Specimen 5" },
-        { "SpecimenFour", "Specimen 4" },
-        { "SpecimenSix", "Specimen 6" },
-        { "SpecimenTen", "Specimen 10" },
-        { "SpecimenThirteen", "Specimen 13" },
-        { "SpecimenThree", "Specimen 3" },
-        { "SpecimenTwelve", "Specimen 12" },
-        { "SpecimenTwo", "Specimen 2" }
+        { "EMSpecimenFour", "Ringu (Endless)" },
+        { "SpecimenEight", "Deer Lord" },
+        { "SpecimenEleven", "Food Demon" },
+        { "SpecimenFive", "Bab" },
+        { "SpecimenFour", "Ringu" },
+        { "SpecimenSix", "The Merchant" },
+        { "SpecimenTen", "Parasite" },
+        { "SpecimenThirteen", "Mermaid" },
+        { "SpecimenThree", "Centipede" },
+        { "SpecimenTwelve", "The Old Man" },
+        { "SpecimenTwo", "Gel" }
     };
 
     internal sealed class ChaserSettings
