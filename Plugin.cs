@@ -8,7 +8,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine;
 
-[BepInPlugin("spooky.relentlessspecimens", "Relentless Specimens", "2.0.0")]
+[BepInPlugin("spooky.relentlessspecimens", "Relentless Specimens", "0.5.0")]
 [BepInDependency(ConfigManagerGuid, BepInDependency.DependencyFlags.SoftDependency)]
 public class Plugin : BaseUnityPlugin
 {
@@ -69,6 +69,7 @@ public class Plugin : BaseUnityPlugin
     internal static ConfigEntry<int> MinRoomsBeforeDespawn;
     internal static ConfigEntry<bool> AllowDuplicateChasers;
     internal static ConfigEntry<bool> AllowSaveWithChasers;
+    internal static ConfigEntry<bool> SkipIntroRooms;
 
     private static readonly Dictionary<string, ChaserSettings> Chasers = new Dictionary<string, ChaserSettings>();
     private static bool loggedChasers;
@@ -97,6 +98,8 @@ public class Plugin : BaseUnityPlugin
                 new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
         AllowSaveWithChasers = Config.Bind("Endless", "AllowSaveWithChasers", true,
             "Lets you exit to the menu while a chaser is active and stops the game from invalidating the Endless save. Active chasers are not saved, so they will be gone when you resume.");
+        SkipIntroRooms = Config.Bind("Endless", "SkipIntroRooms", false,
+            "Removes the specimen intro rooms from Endless floors. Those rooms clear your active chasers and start a guaranteed chase with a specimen you haven't met yet. Takes effect from the next floor (every 100 rooms) or when you load a save.");
 
         BindBulkEdit("SetAllSpawnChance", "Set all chasers' spawn chance",
             "Pick a value, then press Apply to overwrite every chaser's SpawnChance with it. Only works from the F1 window (Configuration Manager).",
@@ -490,6 +493,24 @@ internal static class SpawnPatch
         catch (Exception e)
         {
             Plugin.Log.LogError("SpawnPatch failed: " + e);
+        }
+    }
+}
+
+[HarmonyPatch(typeof(EndlessFloorGenerator), nameof(EndlessFloorGenerator.MakeFloorFor))]
+internal static class SkipIntroRoomsPatch
+{
+    // Each generated floor gets at most one intro series. Dropping it leaves the start room and everything else alone.
+    private static void Postfix(FloorConfig __result)
+    {
+        if (!Plugin.SkipIntroRooms.Value || !Plugin.Active() || __result == null)
+        {
+            return;
+        }
+        if (__result.tempRoomSeries != null && __result.tempRoomSeries.Length > 0)
+        {
+            Plugin.Log.LogInfo("Removed the intro room from this floor.");
+            __result.tempRoomSeries = new FloorConfig.TempRoomSeries[0];
         }
     }
 }

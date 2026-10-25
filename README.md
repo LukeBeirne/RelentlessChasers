@@ -17,6 +17,7 @@ By default the mod only affects Endless mode. The main game is untouched.
   - `ExtraChaserSlots` (default 2): added to the game's chaser cap. The game's own Endless cap is 1 chaser per 100 rooms, up to 5.
   - `EndlessOnly` (default on): only apply the mod in Endless mode.
   - `AllowSaveWithChasers` (default on): lets you quit to the menu with a chaser active, and stops the game invalidating the Endless save. Active chasers aren't saved, so they're gone when you resume.
+  - `SkipIntroRooms` (default off): removes the specimen intro rooms from Endless floors. Those rooms clear your active chasers and start a guaranteed chase with a specimen you haven't met yet. Takes effect from the next floor (every 100 rooms) or when you load a save.
 - **Bulk edit** (F1 window, "Bulk edit" section): pick a value with the slider and press **Apply** to overwrite every chaser's `SpawnChance` or `DespawnChance` at once. You can then adjust individual chasers afterwards. The buttons need Configuration Manager; the two slider values also appear in the `.cfg` file but do nothing there.
 - Chasers are still cleared when you enter their spawn section, as in the base game.
 - Settings are labelled `ID (nickname)`, e.g. `EMKHMonster5 (Ghost Cow)`.
