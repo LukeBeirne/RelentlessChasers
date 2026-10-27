@@ -1,0 +1,7 @@
+{
+  "name": "RelentlessSpecimens",
+  "version_number": "0.5.0",
+  "website_url": "https://github.com/LukeBeirne/RelentlessSpecimens",
+  "description": "Endless mode chasers stay longer and join more often. Every chaser's spawn and despawn behaviour is tunable in game (F1), with presets, escalation and an overlay.",
+  "dependencies": []
+}
