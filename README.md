@@ -14,12 +14,13 @@ By default the mod only affects Endless mode. The main game is untouched.
   - `MinRoomsBeforeDespawn` (default 0): a chaser always stays at least this many rooms. The first despawn roll comes at the end of room N+1. Spooper and Lisa, who give a warning before they can hurt you, don't count rooms or despawn until they become a threat.
   - `AllowDuplicateChasers` (default on): the same chaser can be active more than once.
   - `PersistChasers` (default off): override that stops all chasers despawning.
+  - Exception to all of the above: Lisa's chase and White Face's second pursuit stop the room count (and floor progress) while they last, so they still end no later than in the base game (19 and 15 rooms).
   - `ExtraChaserSlots` (default 2): added to the game's chaser cap. The game's own Endless cap is 1 chaser per 100 rooms, up to 5.
   - `EndlessOnly` (default on): only apply the mod in Endless mode.
   - `AllowSaveWithChasers` (default on): lets you quit to the menu with a chaser active, and stops the game invalidating the Endless save. Active chasers aren't saved, so they're gone when you resume.
   - `SkipIntroRooms` (default off): removes the specimen intro rooms from Endless floors. Those rooms clear your active chasers and start a guaranteed chase with a specimen you haven't met yet. Takes effect from the next floor (every 100 rooms) or when you load a save.
 - **Bulk edit** (F1 window, "Bulk edit" section): pick a value with the slider and press **Apply** to overwrite every chaser's `SpawnChance` or `DespawnChance` at once. You can then adjust individual chasers afterwards. The buttons need Configuration Manager; the two slider values also appear in the `.cfg` file but do nothing there.
-- Chasers are still cleared when you enter their spawn section, as in the base game.
+- Chasers are still cleared when you enter a specimen's intro rooms, as in the base game, unless `SkipIntroRooms` is on.
 - Settings are labelled `ID (nickname)`, e.g. `EMKHMonster5 (Ghost Cow)`.
 
 ## Installation

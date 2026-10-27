@@ -82,7 +82,7 @@ public class Plugin : BaseUnityPlugin
         EndlessOnly = Config.Bind("General", "EndlessOnly", true,
             "Only apply the mod's changes in Endless mode. The main game is left untouched.");
         PersistChasers = Config.Bind("Chasers", "PersistChasers", false,
-            "Override: chasers never despawn, ignoring every chaser's despawn chance and the minimum rooms setting.");
+            "Override: chasers never despawn, ignoring every chaser's despawn chance and the minimum rooms setting. Exception: Lisa's chase and White Face's second pursuit stop the room count, so they still end after their normal length.");
         SpawnChancePerRoom = Config.Bind("Chasers", "SpawnChancePerRoom", 0.5f,
             new ConfigDescription("Chance each room that a new chaser joins, while you are under the chaser cap. When it triggers, which chaser joins is picked using each chaser's own SpawnChance as a weighting.",
                 new AcceptableValueRange<float>(0f, 1f)));
@@ -93,7 +93,7 @@ public class Plugin : BaseUnityPlugin
         AllowDuplicateChasers = Config.Bind("Chasers", "AllowDuplicateChasers", true,
             "Allow the same chaser to be active more than once at the same time.");
         ExtraChaserSlots = Config.Bind("Chasers", "ExtraChaserSlots", 2,
-            new ConfigDescription("Added to the game's chaser cap so new chasers can keep joining after earlier ones stay. In Endless this is on top of the chasers you pick. The game's default cap in Endless is 1 chaser per 100 rooms (rooms 1-100: 0, 101-200: 1, 201-300: 2, and so on up to a maximum of 5 from room 501). If you skip ahead at the start of a run, the base cap is instead the number of chasers you picked on the skip screen.",
+            new ConfigDescription("Added to the game's chaser cap so new chasers can keep joining after earlier ones stay. The game's default cap in Endless is 1 chaser per 100 rooms (rooms 1-100: 0, 101-200: 1, 201-300: 2, and so on up to a maximum of 5 from room 501). If you skip ahead at the start of a run, the base cap is instead the number of chasers you picked on the skip screen.",
                 new AcceptableValueRange<int>(0, 100),
                 new ConfigurationManagerAttributes { ShowRangeAsPercent = false }));
         AllowSaveWithChasers = Config.Bind("Endless", "AllowSaveWithChasers", true,
@@ -241,6 +241,22 @@ public class Plugin : BaseUnityPlugin
         return true;
     }
 
+    // Lisa's chase and White Face's second pursuit stop the room count (and floor progress) until they leave.
+    internal static bool IsFreezingRoomCount(SpecimenInterface spec)
+    {
+        UnknownSpecimen5Controller lisa = spec as UnknownSpecimen5Controller;
+        if (lisa != null)
+        {
+            return Traverse.Create(lisa).Field("didStopRooms").GetValue<bool>();
+        }
+        UnknownSpecimen1Controller whiteFace = spec as UnknownSpecimen1Controller;
+        if (whiteFace != null)
+        {
+            return Traverse.Create(whiteFace).Field("overrodeRoomCount").GetValue<bool>();
+        }
+        return false;
+    }
+
     internal static void LogChasers(SpecimenManager mgr)
     {
         if (loggedChasers || mgr.allRechasableSpecimen == null)
@@ -357,7 +373,20 @@ internal static class DespawnPatch
                     }
                     continue;
                 }
-                spec.hp = Math.Max(spec.hp, 1);
+                if (Plugin.IsFreezingRoomCount(spec))
+                {
+                    // Keep the game's own countdown for this phase so the room count and floor can't stall forever.
+                    if (spec.shouldRemove)
+                    {
+                        Plugin.Log.LogInfo("Despawning " + id + ": its room-freezing phase ran its normal length.");
+                        toRemove.Add(go);
+                        continue;
+                    }
+                }
+                else
+                {
+                    spec.hp = Math.Max(spec.hp, 1);
+                }
                 if (!Plugin.IsThreat(spec))
                 {
                     continue;
@@ -503,7 +532,8 @@ internal static class SkipIntroRoomsPatch
     // Each generated floor gets at most one intro series. Dropping it leaves the start room and everything else alone.
     private static void Postfix(FloorConfig __result)
     {
-        if (!Plugin.SkipIntroRooms.Value || !Plugin.Active() || __result == null)
+        // Only Endless generates floors this way, so no Active() check is needed (it could also misread the game state mid-generation).
+        if (!Plugin.SkipIntroRooms.Value || __result == null)
         {
             return;
         }
