@@ -90,6 +90,7 @@ public class Plugin : BaseUnityPlugin
 
     internal static Plugin Instance;
     internal static ManualLogSource Log;
+    internal static ConfigEntry<bool> ModEnabled;
     internal static ConfigEntry<bool> EndlessOnly;
     internal static ConfigEntry<bool> PersistChasers;
     internal static ConfigEntry<int> ExtraChaserSlots;
@@ -128,6 +129,10 @@ public class Plugin : BaseUnityPlugin
         Instance = this;
         Log = Logger;
 
+        ModEnabled = Config.Bind("General", "ModEnabled", true,
+            new ConfigDescription("Master switch. When off, the mod does nothing and the game plays as if it weren't installed (including leaderboard uploads), without having to uninstall it. Takes effect immediately, except SkipIntroRooms, which changes from the next floor.",
+                null,
+                new ConfigurationManagerAttributes { Order = 100 }));
         EndlessOnly = Config.Bind("General", "EndlessOnly", true,
             "Only apply the mod's changes in Endless mode. The main game is left untouched.");
 
@@ -206,6 +211,11 @@ public class Plugin : BaseUnityPlugin
     {
         try
         {
+            if (!ModEnabled.Value)
+            {
+                showOverlay = false;
+                return;
+            }
             if (ShowChasersKey.Value.IsDown())
             {
                 showOverlay = !showOverlay;
@@ -563,7 +573,7 @@ public class Plugin : BaseUnityPlugin
 
     internal static bool Active()
     {
-        return !EndlessOnly.Value || IsEndless();
+        return ModEnabled.Value && (!EndlessOnly.Value || IsEndless());
     }
 
     internal static int HundredsOfRooms()
@@ -1003,7 +1013,7 @@ internal static class SkipIntroRoomsPatch
     private static void Postfix(FloorConfig __result)
     {
         // Only Endless generates floors this way, so no Active() check is needed (it could also misread the game state mid-generation).
-        if (!Plugin.SkipIntroRooms.Value || __result == null)
+        if (!Plugin.ModEnabled.Value || !Plugin.SkipIntroRooms.Value || __result == null)
         {
             return;
         }
@@ -1021,7 +1031,7 @@ internal static class LeaderboardPatch
 {
     private static bool Prefix(MansionConfig mansion, bool forceEndless)
     {
-        if (Plugin.UploadToLeaderboards.Value)
+        if (!Plugin.ModEnabled.Value || Plugin.UploadToLeaderboards.Value)
         {
             return true;
         }
@@ -1049,7 +1059,7 @@ internal static class KeepEndlessSavePatch
     // The game flags the Endless save as invalid whenever a chaser starts, which makes it delete the save on next load.
     private static bool Prefix(bool newValue)
     {
-        if (newValue && Plugin.AllowSaveWithChasers.Value && Plugin.IsEndless())
+        if (newValue && Plugin.ModEnabled.Value && Plugin.AllowSaveWithChasers.Value && Plugin.IsEndless())
         {
             return false;
         }
@@ -1067,7 +1077,7 @@ internal static class AllowExitWithChasersPatch
 
     private static void Postfix(PauseMenuComponent __instance, ref bool ___noExitActive, LocalizedText __state)
     {
-        if (___noExitActive && Plugin.AllowSaveWithChasers.Value && Plugin.IsEndless())
+        if (___noExitActive && Plugin.ModEnabled.Value && Plugin.AllowSaveWithChasers.Value && Plugin.IsEndless())
         {
             ___noExitActive = false;
             __instance.exitToMenuText.localizedText = __state;

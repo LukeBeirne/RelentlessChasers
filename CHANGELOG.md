@@ -17,3 +17,4 @@ First release.
 - F2 overlay showing active chasers, the cap and the spawn chance.
 - Optional debug hotkeys to spawn a chosen chaser (F3) or clear all chasers (F4).
 - Chasers never spawn in the Endless starting room.
+- `ModEnabled` master switch to turn the whole mod off without uninstalling it.

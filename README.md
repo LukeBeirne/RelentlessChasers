@@ -21,8 +21,10 @@ By default the mod only affects Endless mode. The main game is untouched.
   - `ExtraChaserSlots` (default 2, max 100): added to the game's chaser cap. The game's own Endless cap is 1 chaser per 100 rooms, up to 5. High values work, and are exactly as ridiculous as they sound.
   - Exception to all of the above: Lisa's chase and White Face's second pursuit stop the room count (and floor progress) while they last, so they still end no later than in the base game (19 and 15 rooms).
 - **Escalation**: `SpawnChancePer100Rooms` and `ExtraSlotsPer100Rooms` (both default 0 = off) raise the spawn chance and the cap for every 100 rooms you reach, so the deeper you go the worse it gets.
-- **Endless settings**
+- **General settings**
+  - `ModEnabled` (default on): master switch. Turn it off and the mod does nothing, so you can play the unmodded game without uninstalling it. It takes effect immediately, except `SkipIntroRooms`, which changes from the next floor.
   - `EndlessOnly` (default on): only apply the mod in Endless mode.
+- **Endless settings**
   - `AllowSaveWithChasers` (default on): lets you quit to the menu with a chaser active, and stops the game invalidating the Endless save. Active chasers aren't saved, so they're gone when you resume. This is also how the base game treats them.
   - `SkipIntroRooms` (default off): removes the specimen intro rooms from Endless floors. Those rooms clear your active chasers and start a guaranteed chase with a specimen you haven't met yet. Takes effect from the next floor (every 100 rooms) or when you load a save.
   - `UploadToLeaderboards` (default off): whether Endless scores are sent to the Steam leaderboards while the mod is installed.
